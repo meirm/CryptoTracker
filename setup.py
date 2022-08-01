@@ -1,8 +1,7 @@
-"""A setuptools based setup module.
-
-See:
-https://packaging.python.org/en/latest/distributing.html
-https://github.com/pypa/sampleproject
+"""
+CoinGecko API portfolio management
+based on the previous work of Frankie Primerano
+https://github.com/Max00355/CryptoTracker
 """
 
 # Always prefer setuptools over distutils
@@ -61,15 +60,15 @@ setup(
     #
     # This field corresponds to the "Home-Page" metadata field:
     # https://packaging.python.org/specifications/core-metadata/#home-page-optional
-    url='https://github.com/Max00355/CryptoTracker',  # Optional
+    url='https://github.com/meirm/CryptoTracker',  # Optional
 
     # This should be your name or the name of the organization which owns the
     # project.
-    author='Frankie Primerano',  # Optional
+    author='Meir Michanie',  # Optional
 
     # This should be a valid email address corresponding to the author listed
     # above.
-    author_email='frankieprimerano@gmail.com',  # Optional
+    author_email='meirm@riunx.com',  # Optional
 
     # Classifiers help users find your project by categorizing it.
     #
@@ -91,19 +90,21 @@ setup(
 
         # Specify the Python versions you support here. In particular, ensure
         # that you indicate whether you support Python 2, Python 3 or both.
-        'Programming Language :: Python :: 2',
-        'Programming Language :: Python :: 2.7',
         'Programming Language :: Python :: 3',
         'Programming Language :: Python :: 3.4',
         'Programming Language :: Python :: 3.5',
         'Programming Language :: Python :: 3.6',
+        'Programming Language :: Python :: 3.7',
+        'Programming Language :: Python :: 3.8',
+        'Programming Language :: Python :: 3.9',
+        'Programming Language :: Python :: 3.10',
     ],
 
     # This field adds keywords for your project which will appear on the
     # project page. What does your project relate to?
     #
     # Note that this is a string of words separated by whitespace, not a list.
-    keywords='bitcoin crypto blockchain currency money investing',  # Optional
+    keywords='bitcoin ethereum crypto blockchain currency money investing',  # Optional
 
     # You can just specify package directories manually here if your project is
     # simple. Or you can use find_packages().

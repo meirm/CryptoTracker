@@ -8,6 +8,7 @@ import json
 import argparse
 import sys
 import os
+from pprint import pprint
 
 parser = argparse.ArgumentParser()
 parser.add_argument("-i", '--info', help="Get info on a list of currencies separated by space", nargs="+")
@@ -16,6 +17,7 @@ parser.add_argument("-a", "--add", help="Currency to add to portfolio")
 parser.add_argument("--amt", help="Amount of currency to add to portfolio")
 parser.add_argument("-rm", "--remove", help="Currency to remove from portfolio")
 parser.add_argument("-p", "--portfolio", help="View portfolio", action="store_true")
+parser.add_argument("-e", "--exchange", help="exchange name")
 args = parser.parse_args()
 
 class colors:
@@ -31,10 +33,13 @@ class colors:
 class CoinTracker:
     def __init__(self):
         self.currencies_supported = ["AUD", "BRL", "CAD", "CHF", "CLP", "CNY", "CZK", "DKK", "EUR", "GBP", "HKD", "HUF", "IDR", "ILS", "INR", "JPY", "KRW", "MXN", "MYR", "NOK", "NZD", "PHP", "PKR", "PLN", "RUB", "SEK", "SGD", "THB", "TRY", "TWD", "ZAR"]
-        self.coin_data_url = "https://api.coinmarketcap.com/v1/ticker/?convert={}"
+        self.coin_data_url = "https://api.coingecko.com/api/v3/coins/{}/market_chart?vs_currency={}&days=1&interval=daily"
         self.currency = "USD"
+        self.exchange = "binance"
 
     def parseCommandline(self):
+        if args.exchange:
+            self.exchange = args.exchange
         if args.convert:
             self.changeCurrency(args.convert)
         
@@ -47,62 +52,55 @@ class CoinTracker:
             self.removeFromPortfolio(args.remove)
         elif args.portfolio:
             self.getPortfolioData()
+        
 
-    def getAPIData(self):
-        coin_data = urllib.urlopen(self.coin_data_url.format(self.currency)).read()
+    def getAPIData(self, coin):
+        coin_data = urllib.urlopen(self.coin_data_url.format(coin, self.currency)).read()
         coin_data = json.loads(coin_data)
+        # pprint(coin_data)
         return coin_data
 
     def getCoinData(self, coins):
-        coin_data = self.getAPIData()
         table = [
                 ["Name", "Price ({})".format(self.currency), "Market Cap", "Percent Change"]
         ]
         for coin in coins:
-            for c in coin_data:
-                if coin.upper() == c['symbol'] or coin.lower() == c['name'].lower():
-                    name = c['symbol']
-                    price =  c['price_' + self.currency.lower()]
-                    market_cap = c['market_cap_' + self.currency.lower()]
-                    percent_change = c['percent_change_1h']
-                    if percent_change.startswith("-"):
-                        percent_change = percent_change + "%" 
-                    else:
-                        percent_change = percent_change + "%"
-                    table.append([
-                        name,
-                        price,
-                        market_cap,
-                        percent_change
-                    ])
+            c = self.getAPIData(coin)
+            name = coin.upper()
+            price =  "{:2f}".format(c['prices'][0][1])
+            market_cap = c['market_caps'][0][1]
+            percent_change = 100 * (c['prices'][0][1] / c['prices'][1][1] - 1)
+
+            percent_change =  "{:0.2f}%".format(percent_change)
+            table.append([
+                name,
+                price,
+                market_cap,
+                percent_change
+            ])
         self.printTable(table)
 
     def getPortfolioData(self):
-        coin_data = self.getAPIData()
         portfolio = self.getPortfolio()
         table = [
                 ["Name", "Price ({})".format(self.currency), "Market Cap", "Percent Change", "Holdings", "Value ({})".format(self.currency)]
         ]
         for coin in portfolio:
-            for c in coin_data:
-                if c['symbol'] == coin:
-                    name = c['symbol']
-                    price = c['price_' + self.currency.lower()]
-                    market_cap = c['market_cap_' + self.currency.lower()]
-                    percent_change = c['percent_change_1h']
-                    if percent_change.startswith("-"):
-                        percent_change = percent_change + "%"
-                    else:
-                        percent_change = percent_change + "%"
-                    holdings = portfolio[coin]
-                    value = float(holdings) * float(price) 
-                    value = str(value)
-                    price = str(price)
-                    table.append([
-                        name,
-                        price,
-                        market_cap,
-                        percent_change,
+            c = self.getAPIData(coin.lower())
+            name = coin.upper()
+            price =  "{:2f}".format(c['prices'][0][1])
+            market_cap = c['market_caps'][0][0]
+            percent_change = 100 * (c['prices'][0][1] / c['prices'][1][1] - 1)
+            percent_change =  "{:0.2f}%".format(percent_change)
+            holdings = portfolio[coin]
+            value = float(holdings) * float(price) 
+            value = str(value)
+            price = str(price)
+            table.append([
+                    name,
+                    price,
+                    market_cap,
+                    percent_change,
                         holdings,
                         value
                     ])
@@ -117,6 +115,9 @@ class CoinTracker:
 
     def printTable(self, table):
         max_cols = []
+
+        print("Exchange: {}".format(self.printColor(self.exchange, colors.WARNING, bold=True)))
+        print()
         for columns in range(len(table[0])):
             max_cols.append(max([len(str(x[columns])) for x in table]) + 5)
 
@@ -144,16 +145,13 @@ class CoinTracker:
         return (colors.BOLD if bold else '') + color + item + colors.ENDC
 
     def addToPortfolio(self, currency, amount):
-        apiData = self.getAPIData()
-        for data in apiData:
-            if currency.upper() == data['symbol'] or currency.lower() == data['name'].lower():
-                currency = data['symbol']
-                break
-        else:
+        try:
+            apiData = self.getAPIData(currency)
+        except:
             sys.exit("{} is not supported".format(currency))
 
         portfolioData = self.getPortfolio()
-        portfolioData[currency] = float(amount)
+        portfolioData[currency.upper()] = float(amount)
         self.savePortfolio(portfolioData)
 
     def removeFromPortfolio(self, currency):
@@ -163,16 +161,16 @@ class CoinTracker:
             self.savePortfolio(portfolioData)
 
     def getPortfolio(self):
-        if not os.path.exists(os.path.expanduser("~/portfolio.json")):
+        if not os.path.exists(os.path.expanduser("~/portfolio_{}.json".format(self.exchange))):
             return {}
         try:
-            return json.load(open(os.path.expanduser("~/portfolio.json")))
+            return json.load(open(os.path.expanduser("~/portfolio_{}.json".format(self.exchange))))
         except IOError:
             self.savePortfolio({})
             return {}
 
     def savePortfolio(self, data):
-        json.dump(data, open(os.path.expanduser("~/portfolio.json"), 'w'))
+        json.dump(data, open(os.path.expanduser("~/portfolio_{}.json".format(self.exchange)), 'w'))
 
     def changeCurrency(self, currency):
         currency = currency.upper()

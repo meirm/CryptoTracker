@@ -4,3 +4,6 @@
 *.swn
 __pycache__/
 
+.DS_Store
+cryptotracker.egg-info/
+dist/

@@ -1,10 +1,10 @@
 # CryptoTracker
 
-An easy way to setup and manage your crypto currency portfolio from the terminal.
+An easy way to setup and manage your crypto currency portfolios from the terminal.
 
-(Using the [Coin Market Cap](http://coinmarketcap.com/) API)
+(Using the [CoinGecko](http://coingecko.com/) API)
 
-Compatible with Python 2 and Python 3
+Compatible with Python 3
 
 ## Install
 
@@ -22,17 +22,17 @@ Compatible with Python 2 and Python 3
 
 ### Add to portfolio
 
-`cryptotracker -a btc --amt 2000`
+`cryptotracker --exchange binance -a btc --amt 2000`
 
-`cryptotracker --add ripple --amt 5352`
+`cryptotracker --exchange binance --add ripple --amt 5352`
 
 ### Remove from portfolio
 
-`cryptotracker -rm btc`
+`cryptotracker --exchange binance -rm btc`
 
 ### View Portfolio
 
-`cryptotracker -p`
+`cryptotracker -p -e binance`
 
 ## Screenshot
 
